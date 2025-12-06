@@ -5,25 +5,36 @@ import "core:strconv"
 import "core:strings"
 import "utils"
 
-chunk_string :: proc(s: string, n: int) -> []string {
-	chunks: [dynamic]string = {}
-	length := len(s)
+chunk_string_by_list :: proc(s: string, sizes: []int) -> []string {
+	chunks := make([dynamic]string)
+	idx := 0
+	total := len(s)
 
-	for i := 0; i < length; i += n {
-		end := i + n
-		if end > length {
-			end = length
+	for size in sizes {
+		if idx >= total {
+			break
 		}
-		chunk := s[i:end]
 
-		if strings.contains(chunk, "+") {
-			append(&chunks, "+")
-		} else if strings.contains(chunk, "*") {
-			append(&chunks, "*")
+		end := idx + size
+		if end > total {
+			end = total
+		}
+
+		chunk := s[idx:end]
+		trimmed_chunk := strings.trim_space(chunk)
+
+		if trimmed_chunk == "*" || trimmed_chunk == "+" {
+			append(&chunks, trimmed_chunk)
 		} else {
-			append(&chunks, chunk[0:3])
+			append(&chunks, chunk)
 		}
 
+		idx = end + 1
+	}
+
+	// If there are leftover characters after exhausting the size list
+	if idx < total {
+		append(&chunks, s[idx:total])
 	}
 
 	return chunks[:]
@@ -35,10 +46,28 @@ main :: proc() {
 
 	set := make([dynamic][dynamic]string)
 
-
 	lines := strings.split(content, "\n")
+	sign_line := lines[len(lines) - 2]
+
+	col_lens := make([dynamic]int)
+
+	last_pos := -1
+	for char, index in sign_line {
+		is_sign := char == '*' || char == '+'
+		if is_sign {
+			if last_pos == -1 {
+				last_pos = index
+			} else {
+				append(&col_lens, index - last_pos - 1)
+				last_pos = index
+			}
+		}
+	}
+
+	append(&col_lens, len(sign_line) - last_pos)
+
 	for line in lines {
-		cells := chunk_string(line, 4)
+		cells := chunk_string_by_list(line, col_lens[:])
 		clean_cells := make([dynamic]string)
 		for cell in cells {
 			append(&clean_cells, cell)
@@ -46,6 +75,9 @@ main :: proc() {
 		if len(clean_cells) > 0 {
 			append(&set, clean_cells)
 		}
+	}
+	for i in set {
+		fmt.println(i)
 	}
 
 	for j in 0 ..< len(set[0]) {
