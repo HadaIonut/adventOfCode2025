@@ -32,7 +32,6 @@ chunk_string_by_list :: proc(s: string, sizes: []int) -> []string {
 		idx = end + 1
 	}
 
-	// If there are leftover characters after exhausting the size list
 	if idx < total {
 		append(&chunks, s[idx:total])
 	}
@@ -76,9 +75,6 @@ main :: proc() {
 			append(&set, clean_cells)
 		}
 	}
-	for i in set {
-		fmt.println(i)
-	}
 
 	for j in 0 ..< len(set[0]) {
 		row_wip := make([dynamic][]string)
@@ -91,11 +87,13 @@ main :: proc() {
 			for i1 in 0 ..< len(row_wip) {
 				append(&out, row_wip[i1][j1])
 			}
-			set[j1][j] = strings.trim(strings.join(out[:], ""), " ")
+			set[j1][j] = strings.trim_space(strings.join(out[:], ""))
 		}
 	}
 
-	fmt.println(set)
+	for i in set {
+		fmt.println(i)
+	}
 
 	out := 0
 
@@ -117,8 +115,7 @@ main :: proc() {
 				}
 
 			} else {
-				entry := set[i][j]
-				entry = strings.trim(entry, " ")
+				entry := strings.trim(set[i][j], " ")
 				append(&problem_list, strconv.atoi(entry))
 			}
 		}
