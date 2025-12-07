@@ -1,6 +1,7 @@
 package main
 
 import "core:fmt"
+import "core:time"
 import "utils"
 
 coords :: struct {
@@ -57,6 +58,10 @@ main :: proc() {
 
 	memo := make(map[coords]int)
 
+	start_time := time.now()
 	res := do_id(start, &memo)
+	elapsed := time.since(start_time)
+
+	fmt.println(elapsed)
 	fmt.println(res)
 }
