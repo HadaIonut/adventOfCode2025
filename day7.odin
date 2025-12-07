@@ -1,0 +1,76 @@
+package main
+
+import "core:fmt"
+import "utils"
+
+coords :: struct {
+	x: int,
+	y: int,
+}
+
+splitter_coords: map[coords]bool
+result: int
+
+go_down :: proc(content: [][]string, start: coords) -> (coords, coords, int) {
+	start := start
+	for content[start.x][start.y] != "^" {
+		start.x += 1
+		if start.x > len(content) - 1 {return start, start, 1}
+	}
+
+	if splitter_coords[start] == false {
+		splitter_coords[start] = true
+		result += 1
+	}
+
+
+	left, right := start, start
+
+	left.y -= 1
+	right.y += 1
+
+	return left, right, 0
+}
+
+main :: proc() {
+	result = 0
+	content := utils.read_example_as_matrix()
+
+	start_col := -1
+	for val, index in content[0] {
+		if val == "S" {
+			start_col = index
+			break
+		}
+	}
+
+	start := coords{0, start_col}
+	beams := make([dynamic]coords)
+	append(&beams, start)
+
+	splits := 0
+
+	seen_coords := make(map[coords]bool)
+	splitter_coords = make(map[coords]bool)
+
+	for len(beams) != 0 {
+		beam := pop(&beams)
+		left, right, stop := go_down(content, beam)
+		if stop == 1 {continue}
+		if seen_coords[left] == false {
+			append(&beams, left)
+			seen_coords[left] = true
+		}
+		if seen_coords[right] == false {
+			append(&beams, right)
+
+			seen_coords[right] = true
+		}
+		splits += 1
+	}
+
+	fmt.println(splits)
+	fmt.println(result)
+
+
+}
