@@ -6,6 +6,7 @@ import "core:math"
 import "core:slice"
 import "core:strconv"
 import "core:strings"
+import "core:time"
 import "utils"
 
 point :: struct {
@@ -85,12 +86,14 @@ main :: proc() {
 		}
 	})
 
-	circuit_array := make([dynamic][dynamic]point)
+	circuit_array := make([dynamic]map[point]bool)
 	unused_edges := make(map[point]bool)
 
 	for i in data {
 		unused_edges[i] = true
 	}
+
+	start_time := time.now()
 
 	for edge, edge_index in edges {
 		left, right := edge.points[0], edge.points[1]
@@ -101,8 +104,8 @@ main :: proc() {
 		needs_merging := false
 		index_need_merging := -1
 		for circuit, index in circuit_array {
-			contains_left := slice.contains(circuit[:], left)
-			contains_right := slice.contains(circuit[:], right)
+			contains_left := circuit[left]
+			contains_right := circuit[right]
 
 			if contains_left || contains_right {
 				if !contains_left && did_something {
@@ -110,7 +113,7 @@ main :: proc() {
 					index_need_merging = index
 					break
 				} else if !contains_left {
-					append(&circuit_array[index], left)
+					circuit_array[index][left] = true
 					delete_key(&unused_edges, left)
 				}
 				if !contains_right && did_something {
@@ -118,7 +121,7 @@ main :: proc() {
 					index_need_merging = index
 					break
 				} else if !contains_right {
-					append(&circuit_array[index], right)
+					circuit_array[index][right] = true
 					delete_key(&unused_edges, right)
 				}
 
@@ -129,16 +132,17 @@ main :: proc() {
 
 		if needs_merging {
 			for entry in circuit_array[index_need_merging] {
-				if !slice.contains(circuit_array[index_did_something][:], entry) {
-					append(&circuit_array[index_did_something], entry)
+				if !circuit_array[index_did_something][entry] {
+					circuit_array[index_did_something][entry] = true
 				}
 			}
 			unordered_remove(&circuit_array, index_need_merging)
 		}
 
 		if !did_something {
-			new_circuit := make([dynamic]point)
-			append(&new_circuit, left, right)
+			new_circuit := make(map[point]bool)
+			new_circuit[left] = true
+			new_circuit[right] = true
 			append(&circuit_array, new_circuit)
 
 			delete_key(&unused_edges, left)
@@ -150,4 +154,6 @@ main :: proc() {
 			break
 		}
 	}
+	elapsed := time.since(start_time)
+	fmt.println("time:", elapsed)
 }
