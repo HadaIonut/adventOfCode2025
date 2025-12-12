@@ -151,3 +151,9 @@ generate_combinations_with_repetition :: proc(
 		pop(temp)
 	}
 }
+
+split_once :: proc(value: string, separator: string) -> (string, string) {
+	res := strings.split(value, separator)
+
+	return res[0], res[1]
+}
